@@ -15,6 +15,12 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Test navigation alert sequences
+        run: |
+          mkdir -p /tmp/mibandmaps-tests
+          javac -d /tmp/mibandmaps-tests app/src/main/java/com/tom/mibandmaps/NavigationGate.java tests/NavigationGateTest.java
+          java -cp /tmp/mibandmaps-tests com.tom.mibandmaps.NavigationGateTest
+
       - name: Restore stable debug signing key
         uses: actions/cache@v4
         with:

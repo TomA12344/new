@@ -44,11 +44,11 @@ public class MainActivity extends Activity {
         root.setPadding(dp(24), dp(44), dp(24), dp(24));
         root.setBackgroundColor(Color.rgb(250, 250, 250));
 
-        TextView title = text("Mi Band Maps 1.1", 28, true);
+        TextView title = text("Mi Band Maps " + BuildConfig.VERSION_NAME, 28, true);
         root.addView(title);
 
         TextView intro = text(
-                "Google-Maps-Abbiegehinweise → Android-Benachrichtigung → Mi Fitness → Mi Band 9. Kein eigenes GPS und kein Polling.",
+                "Eine Startmeldung, Abbiegehinweise bei 100 m und 20 m oder „Jetzt“ sowie die Ankunft. Kein eigenes GPS und kein Polling.",
                 16, false);
         intro.setPadding(0, dp(10), 0, dp(20));
         root.addView(intro);
@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
         root.addView(refreshButton);
 
         TextView finish = text(
-                "Wenn die Testnachricht auf dem Band erscheint, funktioniert App → Mi Fitness → Band. Danach Google Maps starten und hier auf „Status aktualisieren“ tippen.",
+                "In Mi Fitness „Mi Band Maps“ aktivieren und „Google Maps“ deaktivieren, damit Maps nicht zusätzlich ungefiltert meldet. Mit „Status aktualisieren“ lässt sich der Empfang prüfen.",
                 14, false);
         finish.setPadding(0, dp(18), 0, 0);
         root.addView(finish);
@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
         createChannel();
         Notification n = new Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_navigation)
-                .setContentTitle("Google Maps")
+                .setContentTitle("Mi Band Maps")
                 .setContentText("Test: In 200 m rechts abbiegen")
                 .setStyle(new Notification.BigTextStyle().bigText("Test: In 200 m rechts abbiegen"))
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
