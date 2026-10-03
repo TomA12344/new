@@ -24,6 +24,14 @@ android {
         }
     }
 
+    signingConfigs {
+        getByName("debug") {
+            System.getenv("MIBANDMAPS_DEBUG_KEYSTORE")?.let {
+                storeFile = file(it)
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

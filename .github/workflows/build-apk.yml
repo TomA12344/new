@@ -27,6 +27,19 @@ jobs:
           path: ~/.android/debug.keystore
           key: mibandmaps-debug-signing-v1
 
+      - name: Prepare cached debug signing key
+        run: |
+          keystore_path="$HOME/.android/debug.keystore"
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$keystore_path" ]; then
+            keytool -genkeypair -noprompt -storetype JKS \
+              -keystore "$keystore_path" -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          echo "MIBANDMAPS_DEBUG_KEYSTORE=$keystore_path" >> "$GITHUB_ENV"
+          keytool -list -keystore "$keystore_path" -storepass android -alias androiddebugkey
+
       - name: Install Android command line tools
         run: |
           ANDROID_SDK_ROOT="$HOME/android-sdk"
@@ -64,3 +77,4 @@ jobs:
           name: MiBandMaps-Android16
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          overwrite: true
