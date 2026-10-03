@@ -5,22 +5,21 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class MapsNotificationListener extends NotificationListenerService {
     private static final String MAPS_PACKAGE = "com.google.android.apps.maps";
     private static final String CHANNEL_ID = "maps_navigation_bridge";
     private static final int BRIDGE_NOTIFICATION_ID = 9001;
-    private static final long MIN_UPDATE_MS = 5000L;
     private static final String PREFS = "diag";
 
     private String lastBody = "";
-    private long lastSentAt = 0L;
+    private String lastManeuverKey = "";
 
     @Override
     public void onListenerConnected() {
@@ -62,13 +61,19 @@ public class MapsNotificationListener extends NotificationListenerService {
         edit.apply();
 
         if (body.isEmpty()) return;
-
-        long now = SystemClock.elapsedRealtime();
         if (body.equals(lastBody)) return;
-        if (now - lastSentAt < MIN_UPDATE_MS && sameManeuver(lastBody, body)) return;
+
+        String maneuverKey = maneuverKey(body);
+
+        // Google Maps aktualisiert die Restentfernung sehr häufig. Solange sich
+        // nur Entfernung / ETA ändern, bekommt das Band KEINE neue Meldung.
+        if (!lastManeuverKey.isEmpty() && maneuverKey.equals(lastManeuverKey)) {
+            lastBody = body;
+            return;
+        }
 
         lastBody = body;
-        lastSentAt = now;
+        lastManeuverKey = maneuverKey;
         publish(body);
     }
 
@@ -131,13 +136,26 @@ public class MapsNotificationListener extends NotificationListenerService {
         return value.toString().replace('\n', ' ').replaceAll("\\s+", " ").trim();
     }
 
-    private boolean sameManeuver(String a, String b) {
-        if (a == null || b == null || a.isEmpty() || b.isEmpty()) return false;
-        String pattern =
-                "\\b\\d+(?:[.,]\\d+)?\\s*(?:m|km|ft|mi|meter|meters|metre|metres|kilometer|kilometers|kilometre|kilometres)\\b";
-        String aa = a.toLowerCase().replaceAll(pattern, "#dist");
-        String bb = b.toLowerCase().replaceAll(pattern, "#dist");
-        return aa.equals(bb);
+    private String maneuverKey(String value) {
+        String s = value.toLowerCase(Locale.ROOT);
+
+        // Entfernungen: 90 m, 1,2 km, 500 ft, 0.3 mi ...
+        s = s.replaceAll(
+                "\\b\\d+(?:[.,]\\d+)?\\s*(?:m|km|ft|mi|meter|meters|metre|metres|kilometer|kilometers|kilometre|kilometres)\\b",
+                "#dist");
+
+        // Restzeit / Fahrtdauer: 8 min, 1 h, 2 Stunden ...
+        s = s.replaceAll(
+                "\\b\\d+(?:[.,]\\d+)?\\s*(?:min|mins|minute|minutes|h|hr|hrs|hour|hours|std|stunde|stunden)\\b",
+                "#time");
+
+        // ETA/Uhrzeit: 08:42, 17:05 ...
+        s = s.replaceAll("\\b\\d{1,2}:\\d{2}\\b", "#clock");
+
+        // Prozentwerte oder reine Geschwindigkeits-/Statuszahlen mit Einheit.
+        s = s.replaceAll("\\b\\d+(?:[.,]\\d+)?\\s*(?:km/h|mph|%)\\b", "#dynamic");
+
+        return s.replaceAll("\\s+", " ").trim();
     }
 
     private void createChannel() {

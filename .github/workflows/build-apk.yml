@@ -15,6 +15,12 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Restore stable debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: mibandmaps-debug-signing-v1
+
       - name: Install Android command line tools
         run: |
           ANDROID_SDK_ROOT="$HOME/android-sdk"
